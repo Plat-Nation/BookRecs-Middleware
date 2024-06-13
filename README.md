@@ -18,7 +18,9 @@ func someHandlerFunc(w http.ResponseWriter, r *http.Request) {
 func main() {
   // As opposed to
   // http.HandlerFunc("/", someHandlerFunc)
-  http.Handle("/" middleware.Auth(someHandlerFunc))
+  http.Handle("/" auth.Auth(someHandlerFunc))
+  // You can also chain multiple middleware
+  http.Handle("/auth" log.LogAll(auth.Auth(someHandlerFunc)))
   http.ListenAndServe(":8080", nil)
 }
 ```
@@ -27,7 +29,37 @@ No secrets or environement variables are required to use this middleware, as the
 
 To use this outside of the BookRecs project, you should fork this repo and replace the public key / get the key from environment variables.
 
+### Log
+The Log middleware logs all requests that come through. It also offers a `Log(r *http.Request, msg string, ...fields)` method that allows you to log something manually and automatically attach the http request information. This isn't strictly necessary as long as the middleware is being used on all routes, but it may be handy.
 
+```go
+// Example existing route handler function
+func someHandlerFunc(w http.ResponseWriter, r *http.Request) {
+  // LogAll will automatically log the HTTP request, but we can also use Log()
+  // to log something manually and include the http request information automatically
+  log.Log(r, "Something happened", zap.String("userId", "0928570987"), zap.Bool("boolean", false))
+  // Log will look like: 
+  // {"level":"info","ts":1718237418.0587106,"caller":"project/main.go:43","msg":"Something happened",
+  // "method":"GET","url":"http://example.com/","headers":["Content-Type: application/json"],"body":"test body",
+  // "userId":"0928570987","boolean":false}
+
+  w.Write([]byte("Hello World!"))
+}
+
+func main() {
+  // As opposed to
+  // http.HandlerFunc("/", someHandlerFunc)
+  http.Handle("/" log.LogAll(someHandlerFunc))
+  // You can also chain multiple middleware
+  http.Handle("/auth" log.LogAll(auth.Auth(someHandlerFunc)))
+  http.ListenAndServe(":8080", nil)
+}
+```
+
+For more information on zap, the logging library we use:
+- https://github.com/uber-go/zap
+- https://betterstack.com/community/guides/logging/go/zap/
+- https://pkg.go.dev/go.uber.org/zap#Field
 
 ## Installation
 
@@ -35,6 +67,7 @@ To install the library, run the go get command with the libary module you want t
 
 ```sh
 go get github.com/Plat-Nation/BookRecs-Middleware/pkg/auth
+go get github.com/Plat-Nation/BookRecs-Middleware/pkg/log
 ```
 
 and then import the library at the top of your go program. You can give a shorter name to the module to make usage simpler:
@@ -43,7 +76,8 @@ and then import the library at the top of your go program. You can give a shorte
 package main
 
 import (
-  middleware "github.com/Plat-Nation/BookRecs-Middleware/pkg/auth"
+  auth "github.com/Plat-Nation/BookRecs-Middleware/pkg/auth"
+  log "github.com/Plat-Nation/BookRecs-Middleware/pkg/log"
 )
 
 ...

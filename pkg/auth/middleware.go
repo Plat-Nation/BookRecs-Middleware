@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"strings"
 
+	log "github.com/Plat-Nation/BookRecs-Middleware/pkg/log"
 	"github.com/golang-jwt/jwt/v4"
 )
 
@@ -59,6 +60,7 @@ func Auth(next http.HandlerFunc) http.HandlerFunc {
 		if verify(authHeader) {
 			next.ServeHTTP(w, r)
 		} else {
+			log.Log(r, "Failed Login")
 			http.Error(w, "Forbidden", http.StatusForbidden)
 			return
 		}

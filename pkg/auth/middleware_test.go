@@ -15,9 +15,13 @@ var jwtKey ed25519.PrivateKey
 
 
 func init() {
-	privateKeyBytes, err := hex.DecodeString(os.Getenv("JWT_KEY"))
+	privateKeyHex := os.Getenv("JWT_KEY")
+	if privateKeyHex == "" {
+		panic("invalid private key, please input the private key as the JWT_KEY environment variable")
+	}
+	privateKeyBytes, err := hex.DecodeString(privateKeyHex)
 	if err != nil {
-			panic("Invalid private key")
+			panic("invalid private key")
 	}
 	jwtKey = ed25519.PrivateKey(privateKeyBytes)
 }
