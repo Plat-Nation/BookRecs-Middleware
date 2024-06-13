@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"strings"
 
-	log "github.com/Plat-Nation/BookRecs-Middleware/pkg/log"
+	log "github.com/Plat-Nation/BookRecs-Middleware/log"
 	"github.com/golang-jwt/jwt/v4"
 )
 

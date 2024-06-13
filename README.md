@@ -66,8 +66,8 @@ For more information on zap, the logging library we use:
 To install the library, run the go get command with the libary module you want to use:
 
 ```sh
-go get github.com/Plat-Nation/BookRecs-Middleware/pkg/auth
-go get github.com/Plat-Nation/BookRecs-Middleware/pkg/log
+go get github.com/Plat-Nation/BookRecs-Middleware/auth
+go get github.com/Plat-Nation/BookRecs-Middleware/log
 ```
 
 and then import the library at the top of your go program. You can give a shorter name to the module to make usage simpler:
@@ -76,8 +76,8 @@ and then import the library at the top of your go program. You can give a shorte
 package main
 
 import (
-  auth "github.com/Plat-Nation/BookRecs-Middleware/pkg/auth"
-  log "github.com/Plat-Nation/BookRecs-Middleware/pkg/log"
+  auth "github.com/Plat-Nation/BookRecs-Middleware/auth"
+  log "github.com/Plat-Nation/BookRecs-Middleware/log"
 )
 
 ...
