@@ -1,6 +1,7 @@
 package log
 
 import (
+	"bytes"
 	"io"
 	"net/http"
 	"os"
@@ -29,6 +30,9 @@ func bodyToString(b io.ReadCloser, logger *zap.Logger, url string) string {
 		return ""
 	}
 	b.Close()
+	// Reset the body reader so later handlers can still use it
+	b = io.NopCloser(bytes.NewBuffer(bodyBytes))
+
 
 	return string(bodyBytes)
 }
