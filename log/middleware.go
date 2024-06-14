@@ -23,15 +23,15 @@ func (h headerArrayMarshaler) MarshalLogArray(enc zapcore.ArrayEncoder) error {
 	return nil
 }
 
-func bodyToString(b io.ReadCloser, logger *zap.Logger, url string) string {
-	bodyBytes, err := io.ReadAll(b)
+func bodyToString(r *http.Request, logger *zap.Logger, url string) string {
+	bodyBytes, err := io.ReadAll(r.Body)
 	if err != nil {
 		logger.Error("Failed to read body in request", zap.String("url", url))
 		return ""
 	}
-	b.Close()
+	r.Body.Close()
 	// Reset the body reader so later handlers can still use it
-	b = io.NopCloser(bytes.NewBuffer(bodyBytes))
+	r.Body = io.NopCloser(bytes.NewBuffer(bodyBytes))
 
 
 	return string(bodyBytes)
@@ -48,7 +48,7 @@ func LogAll(next http.HandlerFunc) http.HandlerFunc {
 			zap.String("method", r.Method),
 			zap.String("url", r.URL.String()),
 			zap.Array("headers", headerArrayMarshaler{headers: r.Header}),
-			zap.String("body", bodyToString(r.Body, logger, r.URL.String())),
+			zap.String("body", bodyToString(r, logger, r.URL.String())),
 		)
 		next(w, r)
 	}
@@ -65,7 +65,7 @@ func Log(r *http.Request, msg string, fields ...zapcore.Field) {
 			zap.String("method", r.Method),
 			zap.String("url", r.URL.String()),
 			zap.Array("headers", headerArrayMarshaler{headers: r.Header}),
-			zap.String("body", bodyToString(r.Body, logger, r.URL.String())),
+			zap.String("body", bodyToString(r, logger, r.URL.String())),
 		}, fields...)...,
 	)
 }
