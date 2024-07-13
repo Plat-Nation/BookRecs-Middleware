@@ -86,6 +86,8 @@ To use this outside of the BookRecs project, you should fork this repo and repla
 ### Log
 The Log middleware logs all requests that come through. It also offers a `Log(logger *zap.Logger, r *http.Request, msg string, ...fields)` method that allows you to log something manually and automatically attach the http request information. This isn't strictly necessary as long as the middleware is being used on all routes, but it may be handy.
 
+By default, the `Log()` method uses the `Info` severity, but there is also a `LogWithLevel()` function that takes a zapcore.Level for the severity level: https://pkg.go.dev/go.uber.org/zap/zapcore#Level
+
 ```go
 
 // Example existing route handler function (we return a handler function that way the outer func can have the any parameter, instead of only (w, r))

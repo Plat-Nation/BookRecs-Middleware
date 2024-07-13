@@ -77,9 +77,19 @@ func (m *Middleware) LogAll(next http.Handler) http.Handler {
 	})
 }
 
-func (m *Middleware) Log(r *http.Request, msg string, fields ...zapcore.Field) {
+// Logging middleware, http request information will be included automatically
+// 
+// Parameters:
+//  - The severity level of the log (zapcore level: https://pkg.go.dev/go.uber.org/zap/zapcore#Level)
+//  - The request itself, which will have its information included in the log
+//  - A message
+//  - Optionally, however many zap fields you want to include in the log
+//
+// Example:
+//  mw.Log(zapcore.ErrorLevel, r, "Something else happened", zap.String("username", "totallyauser"), zap.Int("numOfInfo", 1))
+func (m *Middleware) LogWithLevel(level zapcore.Level, r *http.Request, msg string, fields ...zapcore.Field) {
 	defer m.Logger.Sync()
-	m.Logger.Info(msg,
+	m.Logger.Log(level, msg,
 		append([]zapcore.Field{
 			zap.String("method", r.Method),
 			zap.String("url", r.URL.String()),
@@ -87,6 +97,21 @@ func (m *Middleware) Log(r *http.Request, msg string, fields ...zapcore.Field) {
 			zap.String("body", log.BodyToString(r, m.Logger, r.URL.String())),
 		}, fields...)...,
 	)
+}
+
+//Logging middleware with an "INFO" severity by defalt and http request information will be included automatically
+// 
+// Parameters:
+//  - The request itself, which will have its information included in the log
+//  - A message
+//  - Optionally, however many zap fields you want to include in the log
+//
+// Example:
+//  mw.Log(r, "Something else happened", zap.String("username", "totallyauser"), zap.Int("numOfInfo", 1))
+// or
+//  mw.Log(r, "Simple log")
+func (m *Middleware) Log(r *http.Request, msg string, fields ...zapcore.Field) {
+	m.LogWithLevel(zapcore.InfoLevel, r, msg, fields...)
 }
 
 /*
