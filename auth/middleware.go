@@ -8,6 +8,7 @@ import (
 
 	log "github.com/Plat-Nation/BookRecs-Middleware/log"
 	"github.com/golang-jwt/jwt/v4"
+	"go.uber.org/zap"
 )
 
 var jwtPublicKey ed25519.PublicKey
@@ -51,7 +52,7 @@ func verify(authHeader string) bool {
 // The auth middleware takes in an HTTP handler that the traffic should be routed to on success.
 // If the Authorization header is not included in the request or the JWT included in it is invalid,
 // it responds with a 403, otherwise traffic is forwarded.
-func Auth(next http.HandlerFunc) http.HandlerFunc {
+func Auth(logger *zap.Logger, next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		authHeader := r.Header.Get("Authorization")
 
@@ -60,7 +61,7 @@ func Auth(next http.HandlerFunc) http.HandlerFunc {
 		if verify(authHeader) {
 			next.ServeHTTP(w, r)
 		} else {
-			log.Log(r, "Failed Login")
+			log.Log(logger, r, "Failed Login")
 			http.Error(w, "Forbidden", http.StatusForbidden)
 			return
 		}

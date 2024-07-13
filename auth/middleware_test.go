@@ -8,6 +8,7 @@ import (
 	"os"
 	"testing"
 
+	log "github.com/Plat-Nation/BookRecs-Middleware/log"
 	"github.com/golang-jwt/jwt/v4"
 )
 
@@ -72,7 +73,11 @@ func TestAuthMiddleware(t *testing.T) {
             req.Header.Set("Authorization", test.authHeader)
             rr := httptest.NewRecorder()
 
-            handler := Auth(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+						logger, err := log.Init()
+						if err != nil {
+							panic(err)
+						}
+            handler := Auth(logger, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
                 w.Write([]byte("Hello, World!"))
             }))
 

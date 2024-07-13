@@ -37,12 +37,17 @@ func bodyToString(r *http.Request, logger *zap.Logger, url string) string {
 	return string(bodyBytes)
 }
 
-func LogAll(next http.HandlerFunc) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		logger := zap.Must(zap.NewProduction())
-		if os.Getenv("APP_ENV") == "development" {
-			logger = zap.Must(zap.NewDevelopment())
-		}
+func Init() (*zap.Logger, error) {
+  logger, err := zap.NewProduction()
+  if os.Getenv("APP_ENV") == "development" {
+    logger, err = zap.NewDevelopment()
+  }
+
+  return logger, err
+}
+
+func LogAll(logger *zap.Logger, next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		defer logger.Sync()
 		logger.Info("Received request",
 			zap.String("method", r.Method),
@@ -50,15 +55,11 @@ func LogAll(next http.HandlerFunc) http.HandlerFunc {
 			zap.Array("headers", headerArrayMarshaler{headers: r.Header}),
 			zap.String("body", bodyToString(r, logger, r.URL.String())),
 		)
-		next(w, r)
-	}
+		next.ServeHTTP(w, r)
+	})
 }
 
-func Log(r *http.Request, msg string, fields ...zapcore.Field) {
-	logger := zap.Must(zap.NewProduction())
-	if os.Getenv("APP_ENV") == "development" {
-		logger = zap.Must(zap.NewDevelopment())
-	}
+func Log(logger *zap.Logger, r *http.Request, msg string, fields ...zapcore.Field) {
 	defer logger.Sync()
 	logger.Info(msg,
 		append([]zapcore.Field{

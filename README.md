@@ -30,28 +30,37 @@ No secrets or environement variables are required to use this middleware, as the
 To use this outside of the BookRecs project, you should fork this repo and replace the public key / get the key from environment variables.
 
 ### Log
-The Log middleware logs all requests that come through. It also offers a `Log(r *http.Request, msg string, ...fields)` method that allows you to log something manually and automatically attach the http request information. This isn't strictly necessary as long as the middleware is being used on all routes, but it may be handy.
+The Log middleware logs all requests that come through. It also offers a `Log(logger *zap.Logger, r *http.Request, msg string, ...fields)` method that allows you to log something manually and automatically attach the http request information. This isn't strictly necessary as long as the middleware is being used on all routes, but it may be handy.
 
 ```go
-// Example existing route handler function
-func someHandlerFunc(w http.ResponseWriter, r *http.Request) {
-  // LogAll will automatically log the HTTP request, but we can also use Log()
-  // to log something manually and include the http request information automatically
-  log.Log(r, "Something happened", zap.String("userId", "0928570987"), zap.Bool("boolean", false))
-  // Log will look like: 
-  // {"level":"info","ts":1718237418.0587106,"caller":"project/main.go:43","msg":"Something happened",
-  // "method":"GET","url":"http://example.com/","headers":["Content-Type: application/json"],"body":"test body",
-  // "userId":"0928570987","boolean":false}
 
-  w.Write([]byte("Hello World!"))
+// Example existing route handler function (we return a handler function that way the outer func can have the logger parameter, instead of only (w, r))
+func someHandlerFunc(logger *zap.Logger) http.Handler {
+  return http.HandlerFunc(func(w http.ResponseWriter, r*http.Request) {
+    // LogAll will automatically log the HTTP request, but we can also use Log()
+    // to log something manually and include the http request information automatically
+    log.Log(logger, r, "Something happened", zap.String("userId", "0928570987"), zap.Bool("boolean", false))
+    // Log will look like: 
+    // {"level":"info","ts":1718237418.0587106,"caller":"project/main.go:43","msg":"Something happened",
+    // "method":"GET","url":"http://example.com/","headers":["Content-Type: application/json"],"body":"test body",
+    // "userId":"0928570987","boolean":false}
+
+    w.Write([]byte("Hello World!"))
+  })
 }
 
 func main() {
+  // Initialize logging middleware
+  logger, err := log.Init()
+  // If the logger fails to be created, we can just let the server crash, something is wrong.
+  if err != nil {
+    panic(err)
+  }
   // As opposed to
-  // http.HandlerFunc("/", someHandlerFunc)
-  http.Handle("/" log.LogAll(someHandlerFunc))
+  // http.HandlerFunc("/", someHandlerFunc(logger))
+  http.Handle("/" log.LogAll(someHandlerFunc(logger)))
   // You can also chain multiple middleware
-  http.Handle("/auth" log.LogAll(auth.Auth(someHandlerFunc)))
+  http.Handle("/auth" log.LogAll(auth.Auth(someHandlerFunc(logger))))
   http.ListenAndServe(":8080", nil)
 }
 ```

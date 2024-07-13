@@ -21,10 +21,15 @@ func TestLogAll(t *testing.T) {
 	r, w, _ := os.Pipe()
 	os.Stderr = w
 
+	logger, err := Init()
+  if err != nil {
+    panic(err)
+  }
+
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 	})
-	loggedHandler := LogAll(handler)
+	loggedHandler := LogAll(logger, handler)
 
 	// Create a sample request
 	req := httptest.NewRequest("GET", "http://example.com/foo", bytes.NewBufferString("test body"))
@@ -46,16 +51,16 @@ func TestLogAll(t *testing.T) {
 
 	// Check the logs
 	loggedOutput := buf.String()
-	if !bytes.Contains([]byte(loggedOutput), []byte(`"method": "GET"`)) {
+	if !bytes.Contains([]byte(loggedOutput), []byte(`"method":"GET"`)) {
 		t.Errorf("Expected log to contain method: GET, but it didn't. Log: %s", loggedOutput)
 	}
-	if !bytes.Contains([]byte(loggedOutput), []byte(`"url": "http://example.com/foo"`)) {
+	if !bytes.Contains([]byte(loggedOutput), []byte(`"url":"http://example.com/foo"`)) {
 		t.Errorf("Expected log to contain URL: http://example.com/foo, but it didn't. Log: %s", loggedOutput)
 	}
-	if !bytes.Contains([]byte(loggedOutput), []byte(`"headers": ["Content-Type: application/json"]`)) {
+	if !bytes.Contains([]byte(loggedOutput), []byte(`"headers":["Content-Type: application/json"]`)) {
 		t.Errorf("Expected log to contain headers, but it didn't. Log: %s", loggedOutput)
 	}
-	if !bytes.Contains([]byte(loggedOutput), []byte(`"body": "test body"`)) {
+	if !bytes.Contains([]byte(loggedOutput), []byte(`"body":"test body"`)) {
 		t.Errorf("Expected log to contain body: test body, but it didn't. Log: %s", loggedOutput)
 	}
 }
@@ -74,7 +79,12 @@ func TestLog(t *testing.T) {
 	req := httptest.NewRequest("GET", "http://example.com/foo", bytes.NewBufferString("test body"))
 	req.Header.Set("Content-Type", "application/json")
 
-	Log(req, "Test log message", zap.String("customField", "customValue"))
+	logger, err := Init()
+  if err != nil {
+    panic(err)
+  }
+
+	Log(logger, req, "Test log message", zap.String("customField", "customValue"))
 
 	// Close the writer end of the pipe and read the captured stderr
 	w.Close()
