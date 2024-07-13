@@ -25,6 +25,8 @@ func init() {
 			panic("Invalid private key")
 	}
 	jwtKey = ed25519.PrivateKey(privateKeyBytes)
+	println("Private key: ", jwtKey)
+	println("Raw env: ", os.Getenv("JWT_KEY"))
 }
 
 // Utility function for generating keys, only used manually to initially create keys
@@ -44,4 +46,9 @@ func GenerateJWT() string {
 
 	fmt.Println(tokenString)
 	return tokenString
+}
+
+func main() {
+	GenerateKeys()
+	GenerateJWT()
 }
