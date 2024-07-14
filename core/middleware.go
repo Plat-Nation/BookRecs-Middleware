@@ -7,6 +7,7 @@ import (
 	"github.com/Plat-Nation/BookRecs-Middleware/auth"
 	"github.com/Plat-Nation/BookRecs-Middleware/log"
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/guregu/dynamo"
 	"go.uber.org/zap"
@@ -36,8 +37,15 @@ func Init(db bool, log bool) (*Middleware, error) {
 	}
   
 	if db {
-		sess, err := session.NewSession()
-		db := dynamo.New(sess, &aws.Config{Region: aws.String("us-east-1")})
+		sess, err := session.NewSession(&aws.Config{
+			Region: aws.String("us-east-1"),
+		})
+		if os.Getenv("DB_ENV") != "production" {
+			sess.Config.Endpoint = aws.String("http://localhost:8000")
+			sess.Config.Credentials = credentials.NewStaticCredentials("dummy", "dummy", "dummy")
+		}
+		
+		db := dynamo.New(sess)
 
 		if err != nil {
 			return nil, err
