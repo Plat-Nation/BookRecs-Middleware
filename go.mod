@@ -4,7 +4,7 @@ go 1.22.4
 
 require (
 	github.com/aws/aws-sdk-go v1.54.19
-	github.com/golang-jwt/jwt/v4 v4.5.1
+	github.com/golang-jwt/jwt/v4 v4.5.2
 	github.com/guregu/dynamo v1.23.0
 	go.uber.org/zap v1.27.0
 )
